@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: server-deployment
+spec:
+ replicas: 3
+ selector:
+  matchLabels:
+   component: server
+ template:
+  metadata:
+   labels:
+    component: server
+  spec:
+   containers:
+    - name: server
+      image: stephengrider/multi-server
+      env:
+       - name: REDIS_HOST
+         value: redis-cluster-ip
+       - name: REDIS_PORT
+         value: '6379'
+       - name: PGUSER
+         value: postgres
+       - name: PGHOST
+         value: postgres-cluster-ip
+       - name: PGPORT
+         value: '5432'
+       - name: PGDATABASE
+         value: postgres
+       - name: PGPASSWORD
+       #We put the value from a secret with name of pgpassword and the key of PGPASSWORD
+       # We could have put also the login here
+         valueFrom:
+           secretKeyRef:
+             name: pgpassword
+             key: PGPASSWORD
+      ports:
+       - containerPort: 5000

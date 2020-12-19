@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: postgres-deployment
+spec:
+ replicas: 1
+ selector:
+  matchLabels:
+   component: postgres
+ template:
+  metadata:
+   labels:
+    component: postgres
+  spec:
+  #Link with a persistentVolume Claim
+   volumes:
+    - name: postgres-storage
+      persistentVolumeClaim:
+       claimName: database-persistent-volume-claim
+   containers:
+    - name: postgres
+      image: postgres
+      ports:
+       - containerPort: 5432
+      volumeMounts:
+      #we mount the volume that we claims the name must be the name
+      #mountPath correspond au mapping avec le container
+       - name: postgres-storage
+       #Data directory of postgreSQL
+         mountPath: /var/lib/postgresql/data
+       # All the data will be nested in a postgres folder inside the perssitent volume
+       # here specific postgres
+         subPath: postgres
+      env:
+       - name: POSTGRES_PASSWORD
+       #We put the value from a secret with name of pgpassword and the key of PGPASSWORD
+       # We could have put also the login here
+         valueFrom:
+           secretKeyRef:
+             name: pgpassword
+             key: PGPASSWORD
